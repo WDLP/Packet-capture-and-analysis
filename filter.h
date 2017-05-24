@@ -1,0 +1,10 @@
+#pragma once
+#define arp_filter "ether proto \\arp"
+#define ip_filter ""
+#define tcp_filter ""
+#define udp_filter ""
+#define icmp_filter ""
+#define igmp_filter ""
+#define bootp_filter ""
+#define dhcp_filter ""
+#define snmp_filter ""
