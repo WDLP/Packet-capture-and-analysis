@@ -12,3 +12,4 @@ int proc_udp(pcap_t * adhandle);
 int proc_bootp(pcap_t * adhandle);
 int proc_icmp(pcap_t * adhandle);
 int proc_igmp(pcap_t * adhandle);
+int proc_dhcp(pcap_t * adhandle);
