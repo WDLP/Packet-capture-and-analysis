@@ -8,260 +8,260 @@
 
 int main(int argc, char **argv)
 {
-	pcap_if_t *alldevs;   //ËùÓĞÍøÂçÊÊÅäÆ÷  
-	pcap_if_t *d;   //Ñ¡ÖĞµÄÍøÂçÊÊÅäÆ÷ 
-	int inum;   //Ñ¡ÔñÍøÂçÊÊÅäÆ÷
-	int i = 0;   //forÑ­»·±äÁ¿
-	pcap_t *adhandle;   //´ò¿ªÍøÂçÊÊÅäÆ÷£¬²¶×½ÊµÀı,ÊÇpcap_open·µ»ØµÄ¶ÔÏó
-	char errbuf[PCAP_ERRBUF_SIZE];   //´íÎó»º³åÇø,´óĞ¡Îª256
-	int res;   //×¥°üº¯Êıpcap_next_ex·µ»ØÖµ£¬1-³É¹¦¡¢0£º»ñÈ¡±¨ÎÄ³¬Ê±¡¢-1£º·¢Éú´íÎó¡¢-2: »ñÈ¡µ½ÀëÏß¼ÇÂ¼ÎÄ¼şµÄ×îºóÒ»¸ö±¨ÎÄ
-	u_int netmask;    //×ÓÍøÑÚÂë
-					  //ether proto protocol£ºÈç¹ûÊı¾İ°üÊôÓÚÄ³Ğ©ÒÔÌ«Ğ­Òé£¨protocol£©ÀàĞÍ, ÔòÓë´Ë¶ÔÓ¦µÄÌõ¼ş±í´ïÊ½ÎªÕæ£¬Ğ­Òé×Ö¶Î¿ÉÒÔÊÇARP
-	char * packet_filter;   //Òª×¥È¡µÄ°üµÄÀàĞÍ£¬ÕâÀïÊÇ×¥È¡ARP°ü£»
-	packet_filter = 0;
+    pcap_if_t *alldevs;   //æ‰€æœ‰ç½‘ç»œé€‚é…å™¨
+    pcap_if_t *d;   //é€‰ä¸­çš„ç½‘ç»œé€‚é…å™¨
+    int inum;   //é€‰æ‹©ç½‘ç»œé€‚é…å™¨
+    int i = 0;   //forå¾ªç¯å˜é‡
+    pcap_t *adhandle;   //æ‰“å¼€ç½‘ç»œé€‚é…å™¨ï¼Œæ•æ‰å®ä¾‹,æ˜¯pcap_openè¿”å›çš„å¯¹è±¡
+    char errbuf[PCAP_ERRBUF_SIZE];   //é”™è¯¯ç¼“å†²åŒº,å¤§å°ä¸º256
+    int res;   //æŠ“åŒ…å‡½æ•°pcap_next_exè¿”å›å€¼ï¼Œ1-æˆåŠŸã€0ï¼šè·å–æŠ¥æ–‡è¶…æ—¶ã€-1ï¼šå‘ç”Ÿé”™è¯¯ã€-2: è·å–åˆ°ç¦»çº¿è®°å½•æ–‡ä»¶çš„æœ€åä¸€ä¸ªæŠ¥æ–‡
+    u_int netmask;    //å­ç½‘æ©ç 
+    //ether proto protocolï¼šå¦‚æœæ•°æ®åŒ…å±äºæŸäº›ä»¥å¤ªåè®®ï¼ˆprotocolï¼‰ç±»å‹, åˆ™ä¸æ­¤å¯¹åº”çš„æ¡ä»¶è¡¨è¾¾å¼ä¸ºçœŸï¼Œåè®®å­—æ®µå¯ä»¥æ˜¯ARP
+    char *packet_filter;    //è¦æŠ“å–çš„åŒ…çš„ç±»å‹ï¼Œè¿™é‡Œæ˜¯æŠ“å–ARPåŒ…ï¼›
+    packet_filter = 0;
 
-	struct bpf_program fcode;   //pcap_compileËùµ÷ÓÃµÄ½á¹¹Ìå
-	//struct tm *ltime;   //ºÍÊ±¼ä´¦ÀíÓĞ¹ØµÄ±äÁ¿ 
-	//char timestr[16];   //ºÍÊ±¼ä´¦ÀíÓĞ¹ØµÄ±äÁ¿
-	//time_t local_tv_sec;    //ºÍÊ±¼ä´¦ÀíÓĞ¹ØµÄ±äÁ¿
-
-
+    struct bpf_program fcode;   //pcap_compileæ‰€è°ƒç”¨çš„ç»“æ„ä½“
+    //struct tm *ltime;   //å’Œæ—¶é—´å¤„ç†æœ‰å…³çš„å˜é‡
+    //char timestr[16];   //å’Œæ—¶é—´å¤„ç†æœ‰å…³çš„å˜é‡
+    //time_t local_tv_sec;    //å’Œæ—¶é—´å¤„ç†æœ‰å…³çš„å˜é‡
 
 
-							   /* »ñÈ¡±¾»úÉè±¸ÁĞ±í */
-	if (pcap_findalldevs_ex(PCAP_SRC_IF_STRING, NULL, &alldevs, errbuf) == -1)
-	{
-		fprintf(stderr, "Error in pcap_findalldevs: %s\n", errbuf);
-		exit(1);
-	}
-
-	/* ´òÓ¡ÁĞ±í */
-	for (d = alldevs; d; d = d->next)
-	{
-		printf("%d. %s", ++i, d->name);
-		if (d->description)
-			printf(" (%s)\n", d->description);
-		else
-			printf(" (No description available)\n");
-	}
-
-	if (i == 0)
-	{
-		printf("\nNo interfaces found! Make sure WinPcap is installed.\n");
-		return -1;
-	}
-
-	printf("Enter the interface number (1-%d):", i);
-	scanf("%d", &inum);
-
-	if (inum < 1 || inum > i)
-	{
-		printf("\nInterface number out of range.\n");
-		/* ÊÍ·ÅÉè±¸ÁĞ±í */
-		pcap_freealldevs(alldevs);
-		return -1;
-	}
 
 
-	/* Ìø×ªµ½ÒÑÑ¡ÖĞµÄÊÊÅäÆ÷ */
-	for (d = alldevs, i = 0; i < inum - 1; d = d->next, i++);
+    /* è·å–æœ¬æœºè®¾å¤‡åˆ—è¡¨ */
+    if (pcap_findalldevs_ex(PCAP_SRC_IF_STRING, NULL, &alldevs, errbuf) == -1)
+    {
+        fprintf(stderr, "Error in pcap_findalldevs: %s\n", errbuf);
+        exit(1);
+    }
 
-	/* ´ò¿ªÉè±¸ */
-	if ((adhandle = pcap_open(d->name,          // Éè±¸Ãû
-		65536,            // Òª²¶×½µÄÊı¾İ°üµÄ²¿·Ö 
-						  // 65535±£Ö¤ÄÜ²¶»ñµ½²»Í¬Êı¾İÁ´Â·²ãÉÏµÄÃ¿¸öÊı¾İ°üµÄÈ«²¿ÄÚÈİ
-		PCAP_OPENFLAG_PROMISCUOUS,    // »ìÔÓÄ£Ê½
-		1000,             // ¶ÁÈ¡³¬Ê±Ê±¼ä
-		NULL,             // Ô¶³Ì»úÆ÷ÑéÖ¤
-		errbuf            // ´íÎó»º³å³Ø
-	)) == NULL)
-	{
-		fprintf(stderr, "\nUnable to open the adapter. %s is not supported by WinPcap\n", d->name);
-		/* ÊÍ·ÅÉèÁĞ±í */
-		pcap_freealldevs(alldevs);
-		return -1;
-	}
+    /* æ‰“å°åˆ—è¡¨ */
+    for (d = alldevs; d; d = d->next)
+    {
+        printf("%d. %s", ++i, d->name);
+        if (d->description)
+            printf(" (%s)\n", d->description);
+        else
+            printf(" (No description available)\n");
+    }
 
-	/* ¼ì²éÊı¾İÁ´Â·²ã£¬ÎªÁË¼òµ¥£¬ÎÒÃÇÖ»¿¼ÂÇÒÔÌ«Íø */
-	if (pcap_datalink(adhandle) != DLT_EN10MB)
-	{
-		fprintf(stderr, "\nThis program works only on Ethernet networks.\n");
-		/* ÊÍ·ÅÉè±¸ÁĞ±í */
-		pcap_freealldevs(alldevs);
-		return -1;
-	}
+    if (i == 0)
+    {
+        printf("\nNo interfaces found! Make sure WinPcap is installed.\n");
+        return -1;
+    }
 
-	if (d->addresses != NULL)
-		/* »ñµÃ½Ó¿ÚµÚÒ»¸öµØÖ·µÄÑÚÂë */
-		netmask = ((struct sockaddr_in *)(d->addresses->netmask))->sin_addr.S_un.S_addr;
-	else
-		/* Èç¹û½Ó¿ÚÃ»ÓĞµØÖ·£¬ÄÇÃ´ÎÒÃÇ¼ÙÉèÒ»¸öCÀàµÄÑÚÂë */
-		netmask = 0xffffff;
+    printf("Enter the interface number (1-%d):", i);
+    scanf("%d", &inum);
 
-
-	// ¸ù¾İ²ÎÊı Ñ¡Ôñfilter
-	printf("set filter\n");
-	//printf("%s,%d", argv[0], argc);
-	for (i = 1; i < argc; i += 1)
-	{
-		
-		switch (argv[i][0])
-		{
-			case 'i':
-			{
-				switch (argv[i][1])
-				{
-					case 'p':
-					{
-						packet_filter = ip_filter;
-					}
-					break;
-					case 'c':
-					{
-						packet_filter = icmp_filter;
-					}
-					break;
-					case 'g':
-					{
-						packet_filter = igmp_filter;
-					}
-					break;
-				}
-			//packet_filter = arp_filter;
-			};
-			break;
-			case 'a':
-			{
-				packet_filter = arp_filter;			
-			 };
-			break;
-			case 'b':
-			{
-				packet_filter = bootp_filter;
-			};
-			break;
-			case 'd':
-			{
-				packet_filter = dhcp_filter;
-			}
-			break;
-			
-			case 't':
-			{
-				packet_filter = tcp_filter;
-			}
-			break;
-			case 'u':
-			{
-				packet_filter = udp_filter;
-			}
-			break;
-			case 'o':
-			{
-				//filname=
-			}
-		}
-	}
-
-	//±àÒë¹ıÂËÆ÷
-	if (pcap_compile(adhandle, &fcode, packet_filter, 1, netmask) < 0)
-	{
-		fprintf(stderr, "\nUnable to compile the packet filter. Check the syntax.\n");
-		/* ÊÍ·ÅÉè±¸ÁĞ±í */
-		pcap_freealldevs(alldevs);
-		return -1;
-	}
-
-	//ÉèÖÃ¹ıÂËÆ÷
-	if (pcap_setfilter(adhandle, &fcode) < 0)
-	{
-		fprintf(stderr, "\nError setting the filter.\n");
-		/* ÊÍ·ÅÉè±¸ÁĞ±í */
-		pcap_freealldevs(alldevs);
-		return -1;
-	}
-
-	printf("\nlistening on %s...\n", d->description);
-
-	/* ÊÍ·ÅÉè±¸ÁĞ±í */
-	pcap_freealldevs(alldevs);
+    if (inum < 1 || inum > i)
+    {
+        printf("\nInterface number out of range.\n");
+        /* é‡Šæ”¾è®¾å¤‡åˆ—è¡¨ */
+        pcap_freealldevs(alldevs);
+        return -1;
+    }
 
 
-	/*ÒÔÉÏ´úÂëÔÚWinPcap¿ª·¢ÎÄµµÖĞ¶¼¿ÉÒÔÕÒµ½£¬½âÎöARP°üµÄ´úÂëÔòÒª×Ô¼º±àĞ´*/
+    /* è·³è½¬åˆ°å·²é€‰ä¸­çš„é€‚é…å™¨ */
+    for (d = alldevs, i = 0; i < inum - 1; d = d->next, i++);
+
+    /* æ‰“å¼€è®¾å¤‡ */
+    if ((adhandle = pcap_open(d->name,          // è®¾å¤‡å
+                              65536,            // è¦æ•æ‰çš„æ•°æ®åŒ…çš„éƒ¨åˆ†
+                              // 65535ä¿è¯èƒ½æ•è·åˆ°ä¸åŒæ•°æ®é“¾è·¯å±‚ä¸Šçš„æ¯ä¸ªæ•°æ®åŒ…çš„å…¨éƒ¨å†…å®¹
+                              PCAP_OPENFLAG_PROMISCUOUS,    // æ··æ‚æ¨¡å¼
+                              1000,             // è¯»å–è¶…æ—¶æ—¶é—´
+                              NULL,             // è¿œç¨‹æœºå™¨éªŒè¯
+                              errbuf            // é”™è¯¯ç¼“å†²æ± 
+                             )) == NULL)
+    {
+        fprintf(stderr, "\nUnable to open the adapter. %s is not supported by WinPcap\n", d->name);
+        /* é‡Šæ”¾è®¾åˆ—è¡¨ */
+        pcap_freealldevs(alldevs);
+        return -1;
+    }
+
+    /* æ£€æŸ¥æ•°æ®é“¾è·¯å±‚ï¼Œä¸ºäº†ç®€å•ï¼Œæˆ‘ä»¬åªè€ƒè™‘ä»¥å¤ªç½‘ */
+    if (pcap_datalink(adhandle) != DLT_EN10MB)
+    {
+        fprintf(stderr, "\nThis program works only on Ethernet networks.\n");
+        /* é‡Šæ”¾è®¾å¤‡åˆ—è¡¨ */
+        pcap_freealldevs(alldevs);
+        return -1;
+    }
+
+    if (d->addresses != NULL)
+        /* è·å¾—æ¥å£ç¬¬ä¸€ä¸ªåœ°å€çš„æ©ç  */
+        netmask = ((struct sockaddr_in *)(d->addresses->netmask))->sin_addr.S_un.S_addr;
+    else
+        /* å¦‚æœæ¥å£æ²¡æœ‰åœ°å€ï¼Œé‚£ä¹ˆæˆ‘ä»¬å‡è®¾ä¸€ä¸ªCç±»çš„æ©ç  */
+        netmask = 0xffffff;
 
 
-	printf("Êı¾İ°ü½âÎö\n");
-	int t;
-	printf("%d\n", argc);
-	if (argc == 3)
-	{
-		//printf("!!!!!");
-		t = atoi(argv[2]);
-		//printf("%d\n", t);
-	}
+    // æ ¹æ®å‚æ•° é€‰æ‹©filter
+    printf("set filter\n");
+    //printf("%s,%d", argv[0], argc);
+    for (i = 1; i < argc; i += 1)
+    {
 
-	for (i = 1; i < argc; i += 1)
-	{
+        switch (argv[i][0])
+        {
+        case 'i':
+        {
+            switch (argv[i][1])
+            {
+            case 'p':
+            {
+                packet_filter = ip_filter;
+            }
+            break;
+            case 'c':
+            {
+                packet_filter = icmp_filter;
+            }
+            break;
+            case 'g':
+            {
+                packet_filter = igmp_filter;
+            }
+            break;
+            }
+            //packet_filter = arp_filter;
+        };
+        break;
+        case 'a':
+        {
+            packet_filter = arp_filter;
+        };
+        break;
+        case 'b':
+        {
+            packet_filter = bootp_filter;
+        };
+        break;
+        case 'd':
+        {
+            packet_filter = dhcp_filter;
+        }
+        break;
 
-		switch (argv[i][0])
-		{
-		case 'i':
-		{
-			switch (argv[i][1])
-			{
-			case 'p':
-			{
-				proc_ip(adhandle,t);
-			}
-			break;
-			case 'c':
-			{
-				proc_icmp(adhandle,t);
-			}
-			break;
-			case 'g':
-			{
-				proc_igmp(adhandle,t);
-			}
-			break;
-			}
-		};
-		break;
-		case 'a':
-		{
-			proc_arp(adhandle,t);
-		};
-		break;
-		case 'b':
-		{
-			proc_bootp(adhandle,t);
-		};
-		break;
-		case 'd':
-		{
-			proc_dhcp(adhandle,t);
-		}
-		break;
-		case 't':
-		{
-			proc_tcp(adhandle,t);
-		}
-		break;
-		case 'u':
-		{
-			proc_udp(adhandle,t);
-		}
-		break;
-		case 'o':
-		{
-			//filname=
-		}
-		}
-	}
+        case 't':
+        {
+            packet_filter = tcp_filter;
+        }
+        break;
+        case 'u':
+        {
+            packet_filter = udp_filter;
+        }
+        break;
+        case 'o':
+        {
+            //filname=
+        }
+        }
+    }
 
-	/* »ñÈ¡Êı¾İ°ü */
+    //ç¼–è¯‘è¿‡æ»¤å™¨
+    if (pcap_compile(adhandle, &fcode, packet_filter, 1, netmask) < 0)
+    {
+        fprintf(stderr, "\nUnable to compile the packet filter. Check the syntax.\n");
+        /* é‡Šæ”¾è®¾å¤‡åˆ—è¡¨ */
+        pcap_freealldevs(alldevs);
+        return -1;
+    }
+
+    //è®¾ç½®è¿‡æ»¤å™¨
+    if (pcap_setfilter(adhandle, &fcode) < 0)
+    {
+        fprintf(stderr, "\nError setting the filter.\n");
+        /* é‡Šæ”¾è®¾å¤‡åˆ—è¡¨ */
+        pcap_freealldevs(alldevs);
+        return -1;
+    }
+
+    printf("\nlistening on %s...\n", d->description);
+
+    /* é‡Šæ”¾è®¾å¤‡åˆ—è¡¨ */
+    pcap_freealldevs(alldevs);
 
 
-	system("pause");
-	return 0;
-} 
+    /*ä»¥ä¸Šä»£ç åœ¨WinPcapå¼€å‘æ–‡æ¡£ä¸­éƒ½å¯ä»¥æ‰¾åˆ°ï¼Œè§£æARPåŒ…çš„ä»£ç åˆ™è¦è‡ªå·±ç¼–å†™*/
+
+
+    printf("æ•°æ®åŒ…è§£æ\n");
+    int t;
+    printf("%d\n", argc);
+    if (argc == 3)
+    {
+        //printf("!!!!!");
+        t = atoi(argv[2]);
+        //printf("%d\n", t);
+    }
+
+    for (i = 1; i < argc; i += 1)
+    {
+
+        switch (argv[i][0])
+        {
+        case 'i':
+        {
+            switch (argv[i][1])
+            {
+            case 'p':
+            {
+                proc_ip(adhandle, t);
+            }
+            break;
+            case 'c':
+            {
+                proc_icmp(adhandle, t);
+            }
+            break;
+            case 'g':
+            {
+                proc_igmp(adhandle, t);
+            }
+            break;
+            }
+        };
+        break;
+        case 'a':
+        {
+            proc_arp(adhandle, t);
+        };
+        break;
+        case 'b':
+        {
+            proc_bootp(adhandle, t);
+        };
+        break;
+        case 'd':
+        {
+            proc_dhcp(adhandle, t);
+        }
+        break;
+        case 't':
+        {
+            proc_tcp(adhandle, t);
+        }
+        break;
+        case 'u':
+        {
+            proc_udp(adhandle, t);
+        }
+        break;
+        case 'o':
+        {
+            //filname=
+        }
+        }
+    }
+
+    /* è·å–æ•°æ®åŒ… */
+
+
+    system("pause");
+    return 0;
+}
