@@ -3,7 +3,6 @@
 #include "proce.h"
 #include "protocol.h"
 #include "filter.h"
-#include <stdlib.h>
 
 
 int main(int argc, char **argv)
@@ -18,7 +17,6 @@ int main(int argc, char **argv)
 	u_int netmask;    //子网掩码
 					  //ether proto protocol：如果数据包属于某些以太协议（protocol）类型, 则与此对应的条件表达式为真，协议字段可以是ARP
 	char * packet_filter;   //要抓取的包的类型，这里是抓取ARP包；
-	packet_filter = 0;
 
 	struct bpf_program fcode;   //pcap_compile所调用的结构体
 	//struct tm *ltime;   //和时间处理有关的变量 
@@ -101,7 +99,6 @@ int main(int argc, char **argv)
 
 	// 根据参数 选择filter
 	printf("set filter\n");
-	//printf("%s,%d", argv[0], argc);
 	for (i = 1; i < argc; i += 1)
 	{
 		
@@ -115,25 +112,27 @@ int main(int argc, char **argv)
 					{
 						packet_filter = ip_filter;
 					}
-					break;
 					case 'c':
 					{
 						packet_filter = icmp_filter;
 					}
-					break;
 					case 'g':
 					{
 						packet_filter = igmp_filter;
 					}
-					break;
 				}
-			//packet_filter = arp_filter;
+			packet_filter = arp_filter;
 			};
 			break;
 			case 'a':
 			{
-				packet_filter = arp_filter;			
-			 };
+				packet_filter = arp_filter;
+			};
+			break;
+			case 't':
+			{
+				packet_filter = tcp_filter;
+			}
 			break;
 			case 'b':
 			{
@@ -145,17 +144,10 @@ int main(int argc, char **argv)
 				packet_filter = dhcp_filter;
 			}
 			break;
-			
-			case 't':
+			case 's':
 			{
-				packet_filter = tcp_filter;
+				packet_filter = snmp_filter;
 			}
-			break;
-			case 'u':
-			{
-				packet_filter = udp_filter;
-			}
-			break;
 			case 'o':
 			{
 				//filname=
@@ -202,20 +194,21 @@ int main(int argc, char **argv)
 			{
 			case 'p':
 			{
-				proc_ip(adhandle);
+				packet_filter = ip_filter;
 			}
 			break;
 			case 'c':
 			{
-				proc_icmp(adhandle);
+				packet_filter = icmp_filter;
 			}
 			break;
 			case 'g':
 			{
-				proc_igmp(adhandle);
+				packet_filter = igmp_filter;
 			}
 			break;
 			}
+			packet_filter = arp_filter;
 		};
 		break;
 		case 'a':
@@ -223,26 +216,25 @@ int main(int argc, char **argv)
 			proc_arp(adhandle);
 		};
 		break;
-		case 'b':
-		{
-			proc_bootp(adhandle);
-		};
-		break;
-		case 'd':
-		{
-			proc_dhcp(adhandle);
-		}
-		break;
 		case 't':
 		{
 			proc_tcp(adhandle);
 		}
 		break;
-		case 'u':
+		case 'b':
 		{
-			proc_udp(adhandle);
+			packet_filter = bootp_filter;
+		};
+		break;
+		case 'd':
+		{
+			packet_filter = dhcp_filter;
 		}
 		break;
+		case 's':
+		{
+			packet_filter = snmp_filter;
+		}
 		case 'o':
 		{
 			//filname=
@@ -252,7 +244,7 @@ int main(int argc, char **argv)
 
 	/* 获取数据包 */
 
+	 
 
-	system("pause");
 	return 0;
 } 
