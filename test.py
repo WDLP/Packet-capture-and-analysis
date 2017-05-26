@@ -51,6 +51,8 @@ from docopt import docopt
 arguments = docopt(__doc__)
 # print arguments
 
+
+
 command = ''
 time = 0
 for each in arguments:
